@@ -55,14 +55,8 @@
       }
 
       @keyframes float {
-        0% {
-          transform: translateY(0) scale(1);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(-1000px) scale(1.5);
-          opacity: 0;
-        }
+        0% { transform: translateY(0) scale(1); opacity: 1; }
+        100% { transform: translateY(-1000px) scale(1.5); opacity: 0; }
       }
 
       .bubbles span:nth-child(1)  { left: 5%;   animation-duration: 15s; }
@@ -200,6 +194,29 @@
           margin-bottom: 12px;
         }
       }
+
+      /* HIDE the main buy credits form initially */
+      #buyCreditsForm {
+        display: none;
+      }
+
+      /* Top layer login div */
+      #loginDiv {
+        max-width: 480px;
+        width: 100%;
+        background: #ffffffcc;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      #loginDiv input {
+        margin-top: 10px;
+      }
+      #loginMsg {
+        margin-top: 12px;
+        font-weight: 600;
+        min-height: 20px;
+      }
     </style>
   </head>
   <body>
@@ -210,7 +227,18 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <div class="form-container">
+    <!-- TOP-LAYER LOGIN DIV -->
+    <div id="loginDiv">
+      <img src="https://i.imgur.com/3CNZdsB.jpeg" alt="Logo" class="logo" />
+      <h2>Marketer Access</h2>
+      <label for="marketerId">Enter Your National ID:</label>
+      <input type="text" id="marketerId" placeholder="National ID" autocomplete="off">
+      <button type="button" onclick="checkAccess()">Continue</button>
+      <p id="loginMsg"></p>
+    </div>
+
+    <!-- EXISTING BUY CREDITS FORM -->
+    <div class="form-container" id="buyCreditsForm">
       <img src="https://i.imgur.com/3CNZdsB.jpeg" alt="Logo" class="logo" />
       <h2>Buy SMS Credits For New Users</h2>
       <p style="color: red; font-weight: bold; text-align: center; margin-top: -12px;">
@@ -223,11 +251,10 @@
       <label for="amount">Amount (Min 20 KSh):</label>
       <input type="number" id="amount" min="20" required autocomplete="off">
 
-     <div class="promo-label-container">
-  <label for="promoCode">Promo Code (automatically inserted):</label>
-</div>
-<input type="text" id="promoCode" value="System will handle this correctly." readonly style="background-color: #f3f3f3; color: #888;" />
-
+      <div class="promo-label-container">
+        <label for="promoCode">Promo Code (automatically inserted):</label>
+      </div>
+      <input type="text" id="promoCode" value="System will handle this correctly." readonly style="background-color: #f3f3f3; color: #888;" />
 
       <label for="mpesaNumber">Mpesa Number:</label>
       <input type="tel" id="mpesaNumber" required autocomplete="off"
@@ -235,11 +262,45 @@
              title="Enter a valid 10-digit Mpesa number starting with 0 (e.g., 0712345678 or 0112345678)">
 
       <button type="button" onclick="payNow()">Pay Now</button>
-
       <p id="responseMsg"></p>
     </div>
 
     <script>
+      // Check marketer access
+      function checkAccess() {
+        const marketerId = document.getElementById('marketerId').value.trim();
+        const loginMsg = document.getElementById('loginMsg');
+        if (!marketerId) {
+          loginMsg.innerText = 'Please enter your National ID';
+          loginMsg.className = 'error';
+          return;
+        }
+
+        loginMsg.innerText = 'Checking access...';
+        loginMsg.className = '';
+
+        fetch('https://script.google.com/macros/s/AKfycbyOiGoKpQE7Z2RPdGPTyT24erc_kZRI4-0UuZpFJKJztj1YT_f7CuhqPspOvE5ZAr7N/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nationalId: marketerId })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.authorized) {
+            document.getElementById('loginDiv').style.display = 'none';
+            document.getElementById('buyCreditsForm').style.display = 'block';
+          } else {
+            loginMsg.innerText = 'Access denied. Your National ID is not authorized.';
+            loginMsg.className = 'error';
+          }
+        })
+        .catch(err => {
+          loginMsg.innerText = 'Error verifying access. Try again.';
+          loginMsg.className = 'error';
+        });
+      }
+
+      // Existing payNow function remains unchanged
       function payNow() {
         const nationalId = document.getElementById('nationalId').value.trim();
         const amount = parseFloat(document.getElementById('amount').value);
