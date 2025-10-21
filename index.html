@@ -23,7 +23,7 @@
         padding: 20px;
       }
 
-      .form-container {
+      .form-container, .login-container {
         max-width: 480px;
         width: 100%;
         background: transparent;
@@ -83,12 +83,14 @@
         color: #0077cc;
         margin-bottom: 24px;
       }
+
       label {
         font-weight: 600;
         margin-top: 12px;
         display: inline-block;
         color: #444;
       }
+
       input, button {
         display: block;
         margin-top: 6px;
@@ -101,11 +103,13 @@
         box-sizing: border-box;
         transition: border-color 0.3s ease;
       }
+
       input:focus {
         border-color: #0077cc;
         outline: none;
         background: #eef8ff;
       }
+
       button {
         background-color: #0077cc;
         color: white;
@@ -118,10 +122,12 @@
         box-shadow: 0 3px 8px rgb(0 119 204 / 0.4);
         transition: background-color 0.3s ease;
       }
+
       button:hover {
         background-color: #005fa3;
       }
-      #responseMsg {
+
+      #responseMsg, #loginMsg {
         margin-top: 20px;
         font-weight: 600;
         padding: 12px 15px;
@@ -131,11 +137,13 @@
         min-height: 40px;
         text-align: center;
       }
+
       .success {
         background-color: #e6f4ea;
         color: #2d7a35;
         border: 1.5px solid #2d7a35;
       }
+
       .error {
         background-color: #fdecea;
         color: #a33a3a;
@@ -147,14 +155,17 @@
         align-items: center;
         margin-top: 12px;
       }
+
       .promo-label-container label {
         margin: 0;
         flex-shrink: 0;
       }
+
       .promo-label-container a {
         margin-left: 10px;
         flex-shrink: 0;
       }
+
       .promo-label-container button {
         background-color: #28a745 !important;
         padding: 6px 12px !important;
@@ -165,58 +176,22 @@
         border: none !important;
         cursor: pointer !important;
       }
+
       .promo-label-container button:hover {
         background-color: #218838 !important;
       }
 
       @media (max-width: 440px) {
-        body {
-          padding: 15px 10px;
-        }
-        input, button, #responseMsg {
-          max-width: 100%;
-        }
-        .promo-label-container {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .promo-label-container a {
-          margin-left: 0;
-          margin-top: 6px;
-          width: 100%;
-        }
-        .promo-label-container button {
-          width: 100% !important;
-          font-size: 14px !important;
-        }
-        .logo {
-          max-width: 140px;
-          margin-bottom: 12px;
-        }
+        body { padding: 15px 10px; }
+        input, button, #responseMsg, #loginMsg { max-width: 100%; }
+        .promo-label-container { flex-direction: column; align-items: flex-start; }
+        .promo-label-container a { margin-left: 0; margin-top: 6px; width: 100%; }
+        .promo-label-container button { width: 100% !important; font-size: 14px !important; }
+        .logo { max-width: 140px; margin-bottom: 12px; }
       }
 
-      /* HIDE the main buy credits form initially */
-      #buyCreditsForm {
-        display: none;
-      }
-
-      /* Top layer login div */
-      #loginDiv {
-        max-width: 480px;
-        width: 100%;
-        background: #ffffffcc;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-      }
-      #loginDiv input {
-        margin-top: 10px;
-      }
-      #loginMsg {
-        margin-top: 12px;
-        font-weight: 600;
-        min-height: 20px;
-      }
+      /* Hide main page until login */
+      #mainPage { display: none; }
     </style>
   </head>
   <body>
@@ -227,22 +202,22 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <!-- TOP-LAYER LOGIN DIV -->
-    <div id="loginDiv">
+    <!-- LOGIN CONTAINER -->
+    <div class="login-container" id="loginContainer">
       <img src="https://i.imgur.com/3CNZdsB.jpeg" alt="Logo" class="logo" />
-      <h2>Marketer Access</h2>
-      <label for="marketerId">Enter Your National ID:</label>
-      <input type="text" id="marketerId" placeholder="National ID" autocomplete="off">
-      <button type="button" onclick="checkAccess()">Continue</button>
+      <h2>Marketer Login</h2>
+      <label for="loginNationalId">Enter Your National ID:</label>
+      <input type="text" id="loginNationalId" autocomplete="off" />
+      <button type="button" onclick="verifyAccess()">Login</button>
       <p id="loginMsg"></p>
     </div>
 
-    <!-- EXISTING BUY CREDITS FORM -->
-    <div class="form-container" id="buyCreditsForm">
+    <!-- MAIN PAGE (hidden until login) -->
+    <div class="form-container" id="mainPage">
       <img src="https://i.imgur.com/3CNZdsB.jpeg" alt="Logo" class="logo" />
       <h2>Buy SMS Credits For New Users</h2>
       <p style="color: red; font-weight: bold; text-align: center; margin-top: -12px;">
-        You will get prompt to entre MPESA PIN. After successful purchase of SMS credits, New User gets SMS Credits equivalent to 50% of their Sign Up Amount. You also earn a 50% COMMISSION of this amount INSTANTLY!
+        You will get prompt to enter MPESA PIN. After successful purchase of SMS credits, New User gets SMS Credits equivalent to 50% of their Sign Up Amount. You also earn a 50% COMMISSION of this amount INSTANTLY!
       </p>
 
       <label for="nationalId">National ID/User ID of New User:</label>
@@ -266,41 +241,43 @@
     </div>
 
     <script>
-      // Check marketer access
-      function checkAccess() {
-        const marketerId = document.getElementById('marketerId').value.trim();
-        const loginMsg = document.getElementById('loginMsg');
-        if (!marketerId) {
-          loginMsg.innerText = 'Please enter your National ID';
-          loginMsg.className = 'error';
+      // MARKETER LOGIN
+      function verifyAccess() {
+        const nationalId = document.getElementById('loginNationalId').value.trim();
+        const msgEl = document.getElementById('loginMsg');
+
+        if (!nationalId) {
+          msgEl.innerText = 'Please enter your National ID.';
+          msgEl.className = 'error';
           return;
         }
 
-        loginMsg.innerText = 'Checking access...';
-        loginMsg.className = '';
+        msgEl.innerText = 'Verifying access...';
+        msgEl.className = '';
 
-        fetch('https://script.google.com/macros/s/AKfycbyOiGoKpQE7Z2RPdGPTyT24erc_kZRI4-0UuZpFJKJztj1YT_f7CuhqPspOvE5ZAr7N/exec', {
+        fetch('https://billowing-term-f672.ev-dmaundu.workers.dev/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nationalId: marketerId })
+          body: JSON.stringify({ nationalId })
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           if (data.authorized) {
-            document.getElementById('loginDiv').style.display = 'none';
-            document.getElementById('buyCreditsForm').style.display = 'block';
+            // Hide login, show main page
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
           } else {
-            loginMsg.innerText = 'Access denied. Your National ID is not authorized.';
-            loginMsg.className = 'error';
+            msgEl.innerText = 'Error verifying access. Try again.';
+            msgEl.className = 'error';
           }
         })
         .catch(err => {
-          loginMsg.innerText = 'Error verifying access. Try again.';
-          loginMsg.className = 'error';
+          msgEl.innerText = 'Error connecting to server. Try again.';
+          msgEl.className = 'error';
         });
       }
 
-      // Existing payNow function remains unchanged
+      // PAY NOW FUNCTIONALITY (unchanged)
       function payNow() {
         const nationalId = document.getElementById('nationalId').value.trim();
         const amount = parseFloat(document.getElementById('amount').value);
